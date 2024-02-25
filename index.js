@@ -31,14 +31,14 @@ function userexists(username, password){
 }
 
 
-// parse body - username and password;
+// parse body - username and password and generate token
 app.post("/signin",(req,res) => {
     const username = req.body.username;
     const password = req.body.password;
 
     if(!userexists(username,password)){
         return res.status(403).json({
-            msg : "you are not a authorized user!"
+            msg : "User does not exist!"
         });
     }
 
@@ -48,6 +48,30 @@ app.post("/signin",(req,res) => {
         token
     });
 })
+
+
+//verify user return list of users other than current user
+app.get('/users',(req, res) => {
+
+    const token = req.headers.authorization;
+    const decoded_token = jwt.verify(token, jwtpassword);
+
+    const username = decoded_token.username;
+
+    // return a list of users other than this user;
+
+    const user_list = users.filter((user) => {
+        return user.username == username?false:true;
+    })
+
+    res.json({user_list});
+})
+
+function handleError(err,req,res,next){
+    res.status(403).send("Unauthorized access");
+}
+
+app.use(handleError);
 
 app.listen(port, ()=>{
     console.log("listening");
